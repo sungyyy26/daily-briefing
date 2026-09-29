@@ -1,93 +1,177 @@
 <title>Boosters Sales Pulse</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: status strip → KPI row → trend chart → daily ledger */
-:root{--bg:#f5f6f8;--panel:#fff;--fg:#1a1f2b;--muted:#646c7c;--line:#e1e4ea;--amz:#d9770b;--meta:#2f5fd6;--good:#1c8a4e;--bad:#c23b3b;
+/* Layout: controls bar → status → KPI row → trend + AI analyst → daily ledger */
+:root{--bg:#f5f6f8;--panel:#fff;--fg:#1a1f2b;--muted:#646c7c;--line:#e1e4ea;--amz:#d9770b;--meta:#2f5fd6;--good:#1c8a4e;--bad:#c23b3b;--soft:#eef1f6;
 --display:"Bricolage Grotesque",system-ui,sans-serif;--body:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11141a;--panel:#191d25;--fg:#e8ebf1;--muted:#98a0af;--line:#2a303b;--amz:#f0932e;--meta:#6d94f5;--good:#42c07a;--bad:#ef6b6b;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#11141a;--panel:#191d25;--fg:#e8ebf1;--muted:#98a0af;--line:#2a303b;--amz:#f0932e;--meta:#6d94f5;--good:#42c07a;--bad:#ef6b6b;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11141a;--panel:#191d25;--fg:#e8ebf1;--muted:#98a0af;--line:#2a303b;--amz:#f0932e;--meta:#6d94f5;--good:#42c07a;--bad:#ef6b6b;--soft:#222834;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#11141a;--panel:#191d25;--fg:#e8ebf1;--muted:#98a0af;--line:#2a303b;--amz:#f0932e;--meta:#6d94f5;--good:#42c07a;--bad:#ef6b6b;--soft:#222834;color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);padding:24px 16px 48px}
-.wrap{max-width:1120px;margin:0 auto;display:grid;gap:20px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:16px}
 header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px}
 h1{font-family:var(--display);font-size:1.9rem;margin:0;text-wrap:balance}
 .sub{color:var(--muted);font-size:.85rem;margin-top:4px}
-.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
-.seg button{font:500 .8rem var(--body);border:0;background:none;color:var(--muted);padding:8px 14px;cursor:pointer}
+.controls{display:grid;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.lbl{font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);min-width:58px}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:500 .8rem var(--body);border:0;border-right:1px solid var(--line);background:none;color:var(--muted);padding:7px 12px;cursor:pointer}
+.seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
-.seg button:focus-visible{outline:2px solid var(--meta);outline-offset:-2px}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--meta);outline-offset:1px}
+input[type=date]{font:.8rem var(--mono);padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:.82rem}
 .status{display:flex;flex-wrap:wrap;gap:8px;font-size:.78rem}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}.ok .dot{background:var(--good)}.stale .dot{background:var(--bad)}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}}@media (max-width:520px){.kpis{grid-template-columns:repeat(2,1fr)}}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
-.kpi .lab{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px}
-.kpi .val{font:600 1.55rem var(--display);margin-top:6px;font-variant-numeric:tabular-nums}
-.kpi .d{font:.75rem var(--mono);margin-top:2px;color:var(--muted)}.up{color:var(--good)!important}.down{color:var(--bad)!important}
-.sw{width:8px;height:8px;border-radius:2px}.a{background:var(--amz)}.m{background:var(--meta)}.b{background:var(--fg)}
+.kpi .lab{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kpi .val{font:600 1.5rem var(--display);margin-top:6px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kpi .d{font:.72rem var(--mono);margin-top:2px;color:var(--muted);min-height:1.1em}.up{color:var(--good)!important}.down{color:var(--bad)!important}
+.kpi .hint{font-size:.68rem;color:var(--muted);margin-top:4px}
+.grid2{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px}@media (max-width:900px){.grid2{grid-template-columns:1fr}}
 section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
 h2{font:600 1rem var(--display);margin:0 0 12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .legend{font:400 .75rem var(--body);color:var(--muted);display:flex;gap:14px;align-items:center}.legend span{display:inline-flex;gap:6px;align-items:center}
+.sw{width:8px;height:8px;border-radius:2px}.a{background:var(--amz)}.m{background:var(--meta)}
 svg text{fill:var(--muted);font:10px var(--mono)}
 .tbl{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.82rem;font-variant-numeric:tabular-nums}
 th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}th:first-child,td:first-child{text-align:left}
 th{font-weight:500;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em}
 .empty{padding:40px 16px;text-align:center;color:var(--muted);line-height:1.6}
 .tip{position:fixed;pointer-events:none;background:var(--fg);color:var(--bg);font:.75rem var(--mono);padding:6px 8px;border-radius:6px;white-space:pre}
+.chat{display:flex;flex-direction:column;gap:10px;min-height:320px}
+.log{flex:1;overflow-y:auto;max-height:420px;display:flex;flex-direction:column;gap:8px;font-size:.86rem;line-height:1.5}
+.msg{padding:9px 12px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.u{align-self:flex-end;background:var(--fg);color:var(--bg);max-width:85%}.msg.a{background:var(--soft)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chips button{font:.75rem var(--body);border:1px solid var(--line);background:none;color:var(--fg);border-radius:99px;padding:5px 10px;cursor:pointer}
+.ask{display:flex;gap:8px}.ask textarea{flex:1;min-width:0;resize:vertical;min-height:40px;font:.86rem var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
+.ask button{font:500 .85rem var(--body);border:0;border-radius:8px;padding:0 16px;background:var(--meta);color:#fff;cursor:pointer}.ask button:disabled{opacity:.5;cursor:default}
 </style>
 <div class="wrap">
   <header>
-    <div><h1>Boosters Sales Pulse</h1><div class="sub">Amazon (AX DB) + Meta Ads · refreshes hourly</div></div>
-    <div class="seg" role="group" aria-label="Date range">
-      <button id="r7" data-r="7">7D</button><button id="r30" data-r="30" aria-pressed="true">30D</button><button id="r90" data-r="90">90D</button>
-    </div>
+    <div><h1>Boosters Sales Pulse</h1><div class="sub">EQQUALBERRY · Amazon US (AX DB) + Meta Ads US · refreshes hourly</div></div>
   </header>
+  <div class="controls">
+    <div class="row"><span class="lbl">Dates</span>
+      <div class="seg" id="presets"><button id="p-today" data-p="today">Today</button><button id="p-yday" data-p="yday">Yesterday</button><button id="p-7" data-p="7" aria-pressed="true">Last 7 days</button><button id="p-28" data-p="28">Last 28 days</button><button id="p-custom" data-p="custom">Custom</button></div>
+      <span class="row" id="customBox" hidden><input type="date" id="from" aria-label="From"> – <input type="date" id="to" aria-label="To"></span>
+    </div>
+    <div class="row"><span class="lbl">Compare</span>
+      <label class="chk"><input type="checkbox" id="cmp"> Compare to</label>
+      <div class="seg" id="cmpMode"><button id="c-prev" data-c="prev" aria-pressed="true">Previous period</button><button id="c-custom" data-c="custom">Custom</button></div>
+      <span class="row" id="cmpBox" hidden><input type="date" id="cfrom" aria-label="Compare from"> – <input type="date" id="cto" aria-label="Compare to"></span>
+    </div>
+    <div class="row"><span class="lbl">Product</span>
+      <div class="seg" id="l1"><button id="l1-ALL" data-v="ALL" aria-pressed="true">ALL</button><button id="l1-VIT" data-v="VIT">VIT</button><button id="l1-NAD" data-v="NAD">NAD</button><button id="l1-BAK" data-v="BAK">BAK</button></div>
+      <div class="seg" id="l2"><button id="l2-ALL" data-v="ALL" aria-pressed="true">ALL</button><button id="l2-SRM" data-v="SRM">SRM</button><button id="l2-CRM" data-v="CRM">CRM</button><button id="l2-DUO" data-v="DUO">DUO</button><button id="l2-TRIO" data-v="TRIO">TRIO</button></div>
+      <span class="sub" id="prodName"></span>
+    </div>
+  </div>
   <div class="status" id="status"><span class="pill">Connecting to data…</span></div>
   <div class="kpis" id="kpis"></div>
-  <section><h2>Daily trend<span class="legend"><span><i class="sw a"></i>Amazon sales</span><span><i class="sw m"></i>Meta spend</span></span></h2><div id="chart"></div></section>
+  <div class="grid2">
+    <section><h2><span id="trendTitle">Daily trend</span><span class="legend"><span><i class="sw a"></i>Amazon sales</span><span><i class="sw m"></i>Meta spend</span></span></h2><div id="chart"></div></section>
+    <section class="chat"><h2>AI analyst<span class="sub" style="margin:0">reads the current view</span></h2>
+      <div class="log" id="log"><div class="msg a">Ask about the data in view. For example: why B.ROAS moved, which product is most efficient, or where to shift spend.</div></div>
+      <div class="chips" id="chips"><button id="q1">Summarize this period</button><button id="q2">Compare products</button><button id="q3">Anything unusual?</button></div>
+      <form class="ask" id="askForm"><textarea id="q" placeholder="Ask about sales, spend, CVR…" aria-label="Question"></textarea><button id="send" type="submit">Ask</button></form>
+    </section>
+  </div>
   <section><h2>Daily ledger</h2><div class="tbl" id="table"></div></section>
 </div>
 <div class="tip" id="tip" hidden></div>
 <script>
-let rows=[],sync={},range=30;
+const NAMES={VIT:"Vitamin Illuminating",NAD:"NAD",BAK:"Bakuchiol",SRM:"Serum",CRM:"Cream",DUO:"Duo (Serum + Cream)",TRIO:"Trio"};
+const S={preset:"7",l1:"ALL",l2:"ALL",cmp:false,cmode:"prev",from:"",to:"",cfrom:"",cto:""};
+let facts=[],sync={},sample=null,chatTurns=[];
 const $=id=>document.getElementById(id);
-const cur=()=>sync.currency||"USD";
-const money=v=>v==null?"—":new Intl.NumberFormat("en-US",{style:"currency",currency:cur(),maximumFractionDigits:v>=1000?0:2}).format(v);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money=v=>v==null||!isFinite(v)?"—":new Intl.NumberFormat("en-US",{style:"currency",currency:sync.currency||"USD",maximumFractionDigits:Math.abs(v)>=1000?0:2}).format(v);
 const num=v=>v==null?"—":new Intl.NumberFormat("en-US").format(Math.round(v));
-const pct=v=>v==null||!isFinite(v)?"—":(v*100).toFixed(1)+"%";
+const pct=v=>v==null||!isFinite(v)?"—":(v*100).toFixed(2)+"%";
 const x2=v=>v==null||!isFinite(v)?"—":v.toFixed(2)+"×";
-const sum=(a,k)=>{let s=0,h=false;for(const r of a)if(r[k]!=null){s+=+r[k];h=true}return h?s:null};
 const div=(a,b)=>a!=null&&b?a/b:null;
-function agg(a){const s={};for(const k of["amz_sales","amz_units","amz_orders","amz_sessions","meta_spend","meta_revenue","meta_purchases","meta_clicks","meta_impressions"])s[k]=sum(a,k);
-  s.total=(s.amz_sales??0)+(s.meta_revenue??0)||null;s.cvr=div(s.amz_orders,s.amz_sessions);s.roas=div(s.meta_revenue,s.meta_spend);s.mer=div(s.total,s.meta_spend);return s}
+// Dates are US Pacific (Amazon US / Meta account reporting day)
+const iso=d=>d.toISOString().slice(0,10);
+const todayPT=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/Los_Angeles"}).format(new Date());
+const addDays=(s,n)=>{const d=new Date(s+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+n);return iso(d)};
+const span=(a,b)=>Math.round((new Date(b)-new Date(a))/864e5)+1;
+function range(){const t=todayPT();let a,b;
+  if(S.preset==="today")a=b=t;else if(S.preset==="yday")a=b=addDays(t,-1);
+  else if(S.preset==="custom"){a=S.from||addDays(t,-6);b=S.to||t;if(a>b)[a,b]=[b,a]}
+  else{b=addDays(t,-1);a=addDays(b,-(+S.preset-1))}
+  let c=null;if(S.cmp){if(S.cmode==="custom"&&S.cfrom&&S.cto)c=S.cfrom<=S.cto?[S.cfrom,S.cto]:[S.cto,S.cfrom];else{const n=span(a,b);c=[addDays(a,-n),addDays(a,-1)]}}
+  return{a,b,c}}
+const KEYS=["amz_sales","amz_units","amz_orders","amz_sessions","meta_spend","meta_impressions","meta_clicks","meta_purchases","meta_revenue"];
+const match=r=>(S.l1==="ALL"||r.line===S.l1)&&(S.l2==="ALL"||r.form===S.l2);
+function inRange(a,b){return facts.filter(r=>r.date>=a&&r.date<=b&&match(r))}
+function agg(list){const s={};for(const k of KEYS){let v=0,h=false;for(const r of list)if(r[k]!=null){v+=+r[k];h=true}s[k]=h?v:null}
+  s.sales=s.amz_sales;s.broas=div(s.sales,s.meta_spend);s.cvr=div(s.amz_orders,s.amz_sessions);s.cpa=div(s.meta_spend,s.amz_orders);s.cpm=s.meta_impressions?s.meta_spend/s.meta_impressions*1000:null;return s}
+function byDay(list){const m={};for(const r of list){const d=m[r.date]||(m[r.date]={date:r.date});for(const k of KEYS)if(r[k]!=null)d[k]=(d[k]||0)+ +r[k]}return Object.values(m).sort((x,y)=>x.date<y.date?-1:1)}
 function ago(t){if(!t)return"never";const m=(Date.now()-new Date(t))/6e4;return m<60?Math.round(m)+"m ago":m<2880?Math.round(m/60)+"h ago":Math.round(m/1440)+"d ago"}
-function pill(label,t){const stale=!t||Date.now()-new Date(t)>3*36e5;return `<span class="pill ${stale?"stale":"ok"}"><i class="dot"></i>${label} · ${ago(t)}</span>`}
+function pill(l,t){const st=!t||Date.now()-new Date(t)>3*36e5;return `<span class="pill ${st?"stale":"ok"}"><i class="dot"></i>${l} · ${ago(t)}</span>`}
+function view(){const R=range(),cur=inRange(R.a,R.b),s=agg(cur),p=R.c?agg(inRange(R.c[0],R.c[1])):null;return{R,cur,s,p,days:byDay(cur)}}
 function render(){
-  const sorted=[...rows].sort((a,b)=>a.date<b.date?-1:1),cut=sorted.slice(-range),prev=sorted.slice(-range*2,-range);
-  $("status").innerHTML=pill("Amazon",sync.amazonUpdatedAt)+pill("Meta",sync.metaUpdatedAt)+(sync.note?`<span class="pill">${sync.note.replace(/</g,"&lt;")}</span>`:"");
-  if(!cut.length){$("kpis").innerHTML="";$("chart").innerHTML=$("table").innerHTML=`<div class="empty">No data yet.<br>The hourly sync fills this with Amazon sales from the AX database and Meta Ads results.</div>`;return}
-  const s=agg(cut),p=prev.length?agg(prev):{};
-  const delta=(k,inv)=>{if(s[k]==null||!p[k])return"";const d=s[k]/p[k]-1,good=inv?d<0:d>0;return `<div class="d ${good?"up":"down"}">${d>0?"▲":"▼"} ${Math.abs(d*100).toFixed(1)}% vs prior ${range}d</div>`};
-  const K=[["Total sales","b",money(s.total),"total"],["Amazon sales","a",money(s.amz_sales),"amz_sales"],["Amazon sessions","a",num(s.amz_sessions),"amz_sessions"],["Amazon CVR","a",pct(s.cvr),"cvr"],["Meta spend","m",money(s.meta_spend),"meta_spend",1],["Meta ROAS","m",x2(s.roas),"roas"],["Blended MER","b",x2(s.mer),"mer"]];
-  $("kpis").innerHTML=K.map(([l,c,v,k,inv])=>`<div class="kpi"><div class="lab"><i class="sw ${c}"></i>${l}</div><div class="val">${v}</div>${delta(k,inv)||'<div class="d">&nbsp;</div>'}</div>`).join("");
-  chart(cut);
-  $("table").innerHTML=`<table><thead><tr><th>Date</th><th>Amazon sales</th><th>Orders</th><th>Units</th><th>Sessions</th><th>CVR</th><th>Meta spend</th><th>Meta revenue</th><th>ROAS</th></tr></thead><tbody>${[...cut].reverse().map(r=>`<tr><td>${r.date}</td><td>${money(r.amz_sales)}</td><td>${num(r.amz_orders)}</td><td>${num(r.amz_units)}</td><td>${num(r.amz_sessions)}</td><td>${pct(div(r.amz_orders,r.amz_sessions))}</td><td>${money(r.meta_spend)}</td><td>${money(r.meta_revenue)}</td><td>${x2(div(r.meta_revenue,r.meta_spend))}</td></tr>`).join("")}</tbody></table>`;
+  document.querySelectorAll(".seg button").forEach(b=>{const g=b.parentElement.id,v=b.dataset.p||b.dataset.c||b.dataset.v;b.setAttribute("aria-pressed",String((g==="presets"&&S.preset===v)||(g==="cmpMode"&&S.cmode===v)||(g==="l1"&&S.l1===v)||(g==="l2"&&S.l2===v)))});
+  $("customBox").hidden=S.preset!=="custom";$("cmpBox").hidden=!(S.cmp&&S.cmode==="custom");$("cmpMode").style.opacity=S.cmp?1:.45;
+  $("prodName").textContent=[S.l1!=="ALL"&&NAMES[S.l1],S.l2!=="ALL"&&NAMES[S.l2]].filter(Boolean).join(" ")||"All products";
+  $("status").innerHTML=pill("Amazon",sync.amazonUpdatedAt)+pill("Meta",sync.metaUpdatedAt)+(sync.note?`<span class="pill">${esc(sync.note)}</span>`:"");
+  const{R,s,p,days}=view();
+  $("trendTitle").textContent=`Daily trend · ${R.a===R.b?R.a:R.a+" → "+R.b}${R.c?`  vs ${R.c[0]} → ${R.c[1]}`:""}`;
+  const d=(k,inv)=>{if(!p||s[k]==null||!p[k])return"";const x=s[k]/p[k]-1,g=inv?x<0:x>0;return `<span class="${g?"up":"down"}">${x>0?"▲":"▼"} ${Math.abs(x*100).toFixed(1)}%</span> vs ${fmt(k,p[k])}`};
+  const fmt=(k,v)=>k==="broas"?x2(v):k==="cvr"?pct(v):money(v);
+  const K=[["Total sales","sales","Amazon ordered sales"],["B.ROAS","broas","Total sales ÷ Meta spend"],["CVR","cvr","Amazon orders ÷ sessions"],["Meta spend","meta_spend","",1],["CPA","cpa","Meta spend ÷ Amazon orders",1],["CPM","cpm","Cost per 1,000 impressions",1]];
+  $("kpis").innerHTML=K.map(([l,k,h,inv])=>`<div class="kpi"><div class="lab">${l}</div><div class="val">${fmt(k,s[k])}</div><div class="d">${d(k,inv)}</div>${h?`<div class="hint">${h}</div>`:""}</div>`).join("");
+  if(!days.length){$("chart").innerHTML=$("table").innerHTML=`<div class="empty">No data for this date range and product.<br>The hourly sync adds Amazon sales from the AX database and Meta Ads results.</div>`;return}
+  chart(days);
+  $("table").innerHTML=`<table><thead><tr><th>Date</th><th>Total sales</th><th>Orders</th><th>Sessions</th><th>CVR</th><th>Meta spend</th><th>B.ROAS</th><th>CPA</th><th>CPM</th></tr></thead><tbody>${[...days].reverse().map(r=>`<tr><td>${r.date}</td><td>${money(r.amz_sales)}</td><td>${num(r.amz_orders)}</td><td>${num(r.amz_sessions)}</td><td>${pct(div(r.amz_orders,r.amz_sessions))}</td><td>${money(r.meta_spend)}</td><td>${x2(div(r.amz_sales,r.meta_spend))}</td><td>${money(div(r.meta_spend,r.amz_orders))}</td><td>${money(r.meta_impressions?r.meta_spend/r.meta_impressions*1000:null)}</td></tr>`).join("")}</tbody></table>`;
 }
 function chart(a){
-  const W=Math.max(320,$("chart").clientWidth),H=240,L=52,R=10,T=10,B=24,n=a.length,iw=W-L-R,ih=H-T-B;
+  const W=Math.max(300,$("chart").clientWidth),H=240,L=56,R=10,T=10,B=24,n=a.length,iw=W-L-R,ih=H-T-B;
   const max=Math.max(1,...a.map(r=>Math.max(+r.amz_sales||0,+r.meta_spend||0)));
-  const step=Math.pow(10,Math.floor(Math.log10(max))),top=Math.ceil(max/step)*step,y=v=>T+ih-(v/top)*ih,bw=iw/n;
+  const st=Math.pow(10,Math.floor(Math.log10(max))),top=Math.ceil(max/st)*st,y=v=>T+ih-(v/top)*ih,bw=iw/n;
   let g="";for(let i=0;i<=4;i++){const v=top*i/4;g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${money(v).replace(/\.00$/,"")}</text>`}
   const every=Math.ceil(n/8);let bars="",pts=[];
-  a.forEach((r,i)=>{const x=L+i*bw;bars+=`<rect x="${x+bw*.15}" y="${y(+r.amz_sales||0)}" width="${bw*.7}" height="${ih-(y(+r.amz_sales||0)-T)}" fill="var(--amz)" rx="2" opacity=".85"/><rect x="${x}" y="${T}" width="${bw}" height="${ih}" fill="transparent" data-i="${i}"/>`;
-    if(r.meta_spend!=null)pts.push(`${x+bw/2},${y(+r.meta_spend)}`);if(i%every==0)g+=`<text x="${x+bw/2}" y="${H-6}" text-anchor="middle">${r.date.slice(5)}</text>`});
-  $("chart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${g}${bars}<polyline points="${pts.join(" ")}" fill="none" stroke="var(--meta)" stroke-width="2"/></svg>`;
-  $("chart").querySelector("svg").onmousemove=e=>{const i=e.target.dataset?.i,t=$("tip");if(i==null){t.hidden=true;return}const r=a[i];t.textContent=`${r.date}\nAmazon ${money(r.amz_sales)}\nMeta spend ${money(r.meta_spend)}`;t.style.left=e.clientX+12+"px";t.style.top=e.clientY+12+"px";t.hidden=false};
-  $("chart").querySelector("svg").onmouseleave=()=>$("tip").hidden=true;
+  a.forEach((r,i)=>{const x=L+i*bw,h=ih-(y(+r.amz_sales||0)-T);bars+=`<rect x="${x+bw*.15}" y="${y(+r.amz_sales||0)}" width="${Math.min(bw*.7,48)}" height="${h}" fill="var(--amz)" rx="2" opacity=".85"/><rect x="${x}" y="${T}" width="${bw}" height="${ih}" fill="transparent" data-i="${i}"/>`;
+    if(r.meta_spend!=null)pts.push([x+bw/2,y(+r.meta_spend)]);if(i%every==0)g+=`<text x="${x+bw/2}" y="${H-6}" text-anchor="middle">${r.date.slice(5)}</text>`});
+  const line=pts.length>1?`<polyline points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="var(--meta)" stroke-width="2"/>`:"";
+  const dots=pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="${pts.length>1?2:4}" fill="var(--meta)"/>`).join("");
+  $("chart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${g}${bars}${line}${dots}</svg>`;
+  const svg=$("chart").querySelector("svg"),tip=$("tip");
+  svg.onmousemove=e=>{const i=e.target.dataset?.i;if(i==null){tip.hidden=true;return}const r=a[i];tip.textContent=`${r.date}\nSales ${money(r.amz_sales)}\nMeta spend ${money(r.meta_spend)}\nB.ROAS ${x2(div(r.amz_sales,r.meta_spend))}`;tip.style.left=e.clientX+12+"px";tip.style.top=e.clientY+12+"px";tip.hidden=false};
+  svg.onmouseleave=()=>tip.hidden=true;
 }
-document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{range=+b.dataset.r;document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));render()});
-addEventListener("resize",()=>rows.length&&render());
+// Controls
+const on=(id,fn)=>$(id).addEventListener("click",e=>{const b=e.target.closest("button");if(b){fn(b);render()}});
+on("presets",b=>S.preset=b.dataset.p);on("cmpMode",b=>{S.cmode=b.dataset.c;S.cmp=true;$("cmp").checked=true});
+on("l1",b=>S.l1=b.dataset.v);on("l2",b=>S.l2=b.dataset.v);
+$("cmp").onchange=e=>{S.cmp=e.target.checked;render()};
+for(const k of["from","to","cfrom","cto"])$(k).onchange=e=>{S[k]=e.target.value;render()};
+(()=>{const t=todayPT();$("from").value=S.from=addDays(t,-7);$("to").value=S.to=addDays(t,-1);$("cfrom").value=S.cfrom=addDays(t,-14);$("cto").value=S.cto=addDays(t,-8)})();
+addEventListener("resize",()=>facts.length&&render());
+// AI analyst
+function context(){const{R,s,p,days}=view();const round=o=>JSON.parse(JSON.stringify(o,(k,v)=>typeof v==="number"?Math.round(v*100)/100:v));
+  const prods={};for(const r of facts.filter(r=>r.date>=R.a&&r.date<=R.b)){const k=r.line+"/"+r.form;(prods[k]=prods[k]||[]).push(r)}
+  return round({today_pacific:todayPT(),filter:{product_line:S.l1,product_form:S.l2,date_range:[R.a,R.b],compare_range:R.c},
+    definitions:{total_sales:"Amazon ordered sales",broas:"total sales / Meta spend",cvr:"Amazon orders / sessions",cpa:"Meta spend / Amazon orders",cpm:"Meta spend per 1000 impressions",lines:"VIT=Vitamin Illuminating, NAD, BAK=Bakuchiol, OTH=other/unmapped",forms:"SRM serum, CRM cream, DUO serum+cream, TRIO"},
+    totals:s,compare_totals:p,daily:days,by_product_all_filters_ignored:Object.fromEntries(Object.entries(prods).map(([k,v])=>[k,agg(v)])),data_freshness:{amazon:sync.amazonUpdatedAt,meta:sync.metaUpdatedAt}})}
+function add(cls,text){const m=document.createElement("div");m.className="msg "+cls;m.textContent=text;$("log").appendChild(m);$("log").scrollTop=1e9;return m}
+async function ask(q){q=q.trim();if(!q||!sample)return;$("q").value="";$("send").disabled=true;add("u",q);const out=add("a","Thinking…");
+  const sys=`You are a sharp e-commerce performance analyst for EQQUALBERRY (Amazon US sales driven by Meta ads). Answer using ONLY the JSON data below; say when data is missing (e.g. Amazon not yet synced). Be concise: short bullets, concrete numbers, then 1-3 actions. Plain text, no markdown tables.\n\nDATA:\n${JSON.stringify(context())}`;
+  const turns=[...chatTurns,{role:"user",content:q}];turns[0]={role:"user",content:sys+"\n\nQUESTION: "+turns[0].content};
+  try{const r=await sample(turns,{cache:false,onText:u=>{out.textContent=u.text;$("log").scrollTop=1e9}});out.textContent=r.text;chatTurns.push({role:"user",content:q},{role:"assistant",content:r.text});if(chatTurns.length>12)chatTurns=chatTurns.slice(-12)}
+  catch(e){out.textContent=e?.code==="not_granted"?"AI chat needs your permission. Ask again and allow it when prompted.":e?.code==="rate_limited"?"Too many requests. Wait a minute and try again.":(e?.text||"Couldn't get an answer. Try again.")}
+  $("send").disabled=false}
+$("askForm").onsubmit=e=>{e.preventDefault();ask($("q").value)};
+$("q").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();ask($("q").value)}};
+$("q1").onclick=()=>ask("Summarize performance for this period and filter.");$("q2").onclick=()=>ask("Compare the products: which is most and least efficient on B.ROAS and CPA?");$("q3").onclick=()=>ask("Anything unusual or worrying in the daily data?");
 render();
-(async()=>{const db=await window.claude?.use("db");if(!db){$("status").innerHTML='<span class="pill stale"><i class="dot"></i>Data store unavailable in this view</span>';return}
-  db.collection("daily").orderBy("date","desc").limit(180).onSnapshot(q=>{rows=q.docs.map(d=>d.data());render()},()=>{});
+(async()=>{const c=window.claude;if(!c)return;
+  c.use("sample").then(s=>{sample=s;if(!s){$("askForm").hidden=$("chips").hidden=true;add("a","AI chat isn't available in this view.")}});
+  const db=await c.use("db");if(!db){$("status").innerHTML='<span class="pill stale"><i class="dot"></i>Data store unavailable in this view</span>';return}
+  db.collection("facts").orderBy("date","desc").limit(1000).onSnapshot(q=>{facts=q.docs.map(d=>d.data());render()},()=>{});
   db.doc("status/sync").onSnapshot(d=>{sync=d.data()||{};render()},()=>{});})();
 </script>
