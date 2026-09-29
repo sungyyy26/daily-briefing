@@ -25,16 +25,21 @@ def num(v):
     try: return float(v)
     except (TypeError, ValueError): return 0.0
 
-raw = json.load(open(sys.argv[1]))
-rows = json.loads(raw["ad_entities"]) if isinstance(raw.get("ad_entities"), str) else raw["ad_entities"]
-out = collections.defaultdict(lambda: collections.Counter())
-for r in rows:
-    c = classify(r.get("name", ""))
-    if not c or "date_start" not in r: continue
-    k = (r["date_start"], *c)
-    out[k].update({"meta_spend": num(r.get("amount_spent")), "meta_impressions": num(r.get("impressions")),
-                   "meta_clicks": num(r.get("clicks")), "meta_purchases": num(r.get("omni_purchase")),
-                   "meta_revenue": num(r.get("omni_purchase_values"))})
-facts = [{"id": f"{d}_{l}_{f}", "date": d, "line": l, "form": f, **{k: round(v, 2) for k, v in m.items()}}
-         for (d, l, f), m in sorted(out.items())]
-json.dump({"facts": facts, "next_cursor": (raw.get("pagination") or {}).get("next_cursor")}, sys.stdout)
+def main():
+  raw = json.load(open(sys.argv[1]))
+  rows = json.loads(raw["ad_entities"]) if isinstance(raw.get("ad_entities"), str) else raw["ad_entities"]
+  out = collections.defaultdict(lambda: collections.Counter())
+  for r in rows:
+      c = classify(r.get("name", ""))
+      if not c or "date_start" not in r: continue
+      k = (r["date_start"], *c)
+      out[k].update({"meta_spend": num(r.get("amount_spent")), "meta_impressions": num(r.get("impressions")),
+                     "meta_clicks": num(r.get("clicks")), "meta_purchases": num(r.get("omni_purchase")),
+                     "meta_revenue": num(r.get("omni_purchase_values"))})
+  facts = [{"id": f"{d}_{l}_{f}", "date": d, "line": l, "form": f, **{k: round(v, 2) for k, v in m.items()}}
+           for (d, l, f), m in sorted(out.items())]
+  json.dump({"facts": facts, "next_cursor": (raw.get("pagination") or {}).get("next_cursor")}, sys.stdout)
+
+
+if __name__ == "__main__":
+  main()

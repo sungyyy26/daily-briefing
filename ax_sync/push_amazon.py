@@ -1,12 +1,11 @@
 """Run on the AX server (cron, hourly). Queries Amazon sales from the AX MySQL DB,
-writes data/amazon_daily.json and pushes it to GitHub. The hourly dashboard job
-reads that file.
+POSTs product-level daily rows to the dashboard ingest API (no data in git).
 
 Setup:  pip install pymysql
         cp .env.example .env   # fill in values
 Cron:   5 * * * * cd /path/to/daily-briefing && python3 ax_sync/push_amazon.py
 """
-import json, os, subprocess, datetime, decimal, pathlib
+import json, os, datetime, decimal, pathlib, urllib.request
 import pymysql
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -51,14 +50,9 @@ for r in raw:
     line, form = PRODUCT_MAP.get(str(r["sku"]), "OTH/OTH").split("/")
     a = agg.setdefault((r["date"], line, form), {"date": r["date"], "line": line, "form": form})
     for k in ("sales", "units", "orders", "sessions"):
-        if r.get(k) is not None: a[k] = round(a.get(k, 0) + float(r[k]), 2)
+        if r.get(k) is not None: a["amz_" + k] = round(a.get("amz_" + k, 0) + float(r[k]), 2)
 rows = sorted(agg.values(), key=lambda a: (a["date"], a["line"], a["form"]))
 
-out = ROOT / "data" / "amazon_daily.json"
-out.write_text(json.dumps({"updatedAt": datetime.datetime.utcnow().isoformat() + "Z", "rows": rows}, indent=1))
-
-git = lambda *a: subprocess.run(["git", "-C", str(ROOT), *a], check=True)
-git("add", str(out))
-if subprocess.run(["git", "-C", str(ROOT), "diff", "--cached", "--quiet"]).returncode:
-    git("commit", "-m", "data: amazon sync")
-    git("push", "origin", os.environ.get("GIT_BRANCH", "main"))
+body = json.dumps({"source": "amazon", "updatedAt": datetime.datetime.utcnow().isoformat() + "Z", "facts": rows}).encode()
+req = urllib.request.Request(os.environ["INGEST_URL"], body, {"Content-Type": "application/json", "Authorization": "Bearer " + os.environ["INGEST_TOKEN"]})
+print(urllib.request.urlopen(req, timeout=60).read().decode())
