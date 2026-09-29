@@ -1,4 +1,4 @@
-"""GitHub Action: pull Meta Ads campaign insights (daily, last 35 days) with the
+"""GitHub Action: pull Meta Ads campaign insights (daily, last 60 days) with the
 System User token, classify by product, and POST to the dashboard's ingest API.
 Env: META_TOKEN, META_AD_ACCOUNT, INGEST_URL, INGEST_TOKEN, [META_API_VERSION]"""
 import json, os, sys, datetime, urllib.request, urllib.parse, collections
@@ -9,7 +9,7 @@ ver = os.environ.get("META_API_VERSION", "v23.0")
 today = datetime.date.today()
 params = {"level": "campaign", "time_increment": "1", "limit": "500",
           "fields": "campaign_name,spend,impressions,clicks,actions,action_values",
-          "time_range": json.dumps({"since": str(today - datetime.timedelta(days=35)), "until": str(today)}),
+          "time_range": json.dumps({"since": str(today - datetime.timedelta(days=60)), "until": str(today)}),
           "access_token": os.environ["META_TOKEN"]}
 url = f"https://graph.facebook.com/{ver}/act_{os.environ['META_AD_ACCOUNT']}/insights?" + urllib.parse.urlencode(params)
 
